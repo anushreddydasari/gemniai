@@ -1,36 +1,36 @@
-import requests
-import json
+import os
+from dotenv import load_dotenv
+import google.generativeai as genai
 
-GEMINI_API_KEY = "AIzaSyCMO28d7v8lI8W9VIOL-ENdMmlw9okPoJw"
-GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-HEADERS = {"Content-Type": "application/json"}
+# Load environment variables from .env file
+load_dotenv()
 
-def generate_app_logic_code(app_idea):
-    prompt = f"""
-You are a senior software engineer. Given the app idea "{app_idea}", write the core logic code in Python or JavaScript (whichever fits best) that includes:
+# Load Gemini API Key
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    raise ValueError("❌ GEMINI_API_KEY not set in environment.")
 
-- Basic functionality
-- Comments
-- Proper formatting
+# Configure the API
+genai.configure(api_key=GEMINI_API_KEY)
 
-Only output code. Do NOT include explanation.
+# Load Gemini model
+model = genai.GenerativeModel('gemini-pro')
+
+# ✅ Agent 3 - Generate code prompt from app info
+def generate_code_prompt(app_info):
+    return f"""Generate complete backend and frontend starter code for the following application idea:
+    
+{app_info}
+
+Requirements:
+- Use modern frameworks (React, Flask, Express, etc.)
+- Organize code into modules
+- Include comments
+- Output code in markdown code blocks
 """
 
-    data = {
-        "contents": [
-            {
-                "role": "user",
-                "parts": [{"text": prompt}]
-            }
-        ]
-    }
-
-    response = requests.post(GEMINI_ENDPOINT, headers=HEADERS, data=json.dumps(data))
-
-    if response.status_code != 200:
-        return f"❌ Agent 3 Gemini error {response.status_code}: {response.text}"
-
-    try:
-        return response.json()["candidates"][0]["content"]["parts"][0]["text"]
-    except (KeyError, IndexError):
-        return "⚠️ Agent 3: Unexpected Gemini response structure."
+# ✅ Agent 3 - Get the generated code from Gemini
+def generate_code_from_prompt(prompt):
+    print("⏳ Generating code using Gemini...")
+    response = model.generate_content(prompt)
+    return response.text  # Gemini returns code in markdown format

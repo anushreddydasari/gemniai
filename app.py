@@ -1,39 +1,33 @@
-# app.py
-from flask import Flask, render_template, request
-from agent1 import generate_app_info
+from flask import Flask, request, jsonify, render_template
+from agent1 import generate_agent1_response
 from agent2 import generate_ui_prompt, generate_ui_image
-from agent3 import generate_app_logic_code
+from agent3 import generate_code_prompt
 
 app = Flask(__name__)
 
-@app.route("/", methods=["GET", "POST"])
+@app.route('/')
 def index():
-    app_idea = ""
-    agent1_output = ""
-    agent2_prompt = ""
-    agent2_image_url = ""
-    agent3_code = ""
+    return render_template('index.html')
 
-    if request.method == "POST":
-        app_idea = request.form["app_idea"]
+@app.route('/api/agent1/generate', methods=['POST'])
+def agent1_generate():
+    input_data = request.form.get('input') or request.json.get('input')
+    output = generate_agent1_response(input_data)
+    return jsonify({"response": output})
 
-        # Agent 1: Generate tech stack, MVP, and features
-        agent1_output = generate_app_info(app_idea)
+@app.route('/api/agent2/generate', methods=['POST'])
+def agent2_generate():
+    app_info = request.form.get('app_info') or request.json.get('app_info')
+    prompt = generate_ui_prompt(app_info)
+    image_url = generate_ui_image(prompt)
+    return jsonify({"prompt": prompt, "image_url": image_url})
 
-        # Agent 2: Generate UI image prompt and image
-        agent2_prompt = generate_ui_prompt(app_idea)
-        if not agent2_prompt.startswith("\u274c") and not agent2_prompt.startswith("\u26a0\ufe0f"):
-            agent2_image_url = generate_ui_image(agent2_prompt)
+@app.route('/api/agent3/generate', methods=['POST'])
+def agent3_generate():
+    app_info = request.form.get('app_info') or request.json.get('app_info')
+    code = generate_code_prompt(app_info)
+    return jsonify({"code": code})
 
-        # Agent 3: Generate core logic code
-        agent3_code = generate_app_logic_code(app_idea)
-
-    return render_template("index.html",
-                           app_idea=app_idea,
-                           agent1_output=agent1_output,
-                           agent2_prompt=agent2_prompt,
-                           agent2_image_url=agent2_image_url,
-                           agent3_code=agent3_code)
-
-if __name__ == "__main__":
+if __name__ == '__main__':
+    print("✅ AI Agent App is running! Use POST on /api/agent1/generate, /api/agent2/generate, /api/agent3/generate")
     app.run(debug=True)

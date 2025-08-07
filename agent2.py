@@ -1,39 +1,36 @@
-# agent2.py
-import requests
-import json
+import os
+from dotenv import load_dotenv
+import google.generativeai as genai
 
-GEMINI_API_KEY = "AIzaSyCMO28d7v8lI8W9VIOL-ENdMmlw9okPoJw"
-GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-HEADERS = {"Content-Type": "application/json"}
+# ✅ Load environment variables from .env
+load_dotenv()
 
-def generate_ui_prompt(app_idea):
-    prompt = f"""
-You are a UI designer. Given the app idea "{app_idea}", generate a short prompt for an image generation model like DALL·E to create a UI mockup.
+# ✅ Get the Gemini API key from the environment
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    raise ValueError("❌ GEMINI_API_KEY not set in environment.")
 
-Only output the image prompt. Do NOT include explanations.
-Example: "Modern mobile UI design for a food delivery app with product cards, clean layout, light colors"
-"""
+# ✅ Configure the Gemini API
+genai.configure(api_key=GEMINI_API_KEY)
 
-    data = {
-        "contents": [
-            {
-                "role": "user",
-                "parts": [{"text": prompt}]
-            }
-        ]
-    }
+# ✅ Use Gemini model
+model = genai.GenerativeModel('gemini-pro')
 
-    response = requests.post(GEMINI_ENDPOINT, headers=HEADERS, data=json.dumps(data))
+# ✅ Agent 2 - UI prompt generator
+def generate_ui_prompt(app_info):
+    return f"""Generate a beautiful and modern UI design idea for this app:
+    
+{app_info}
 
-    if response.status_code != 200:
-        return f"❌ Agent 2 Gemini error {response.status_code}: {response.text}"
+The design should include:
+- Header / Navbar
+- Main content area
+- User interaction section (buttons, inputs, etc.)
+- Responsive layout
+- Suggested colors and themes"""
 
-    try:
-        return response.json()["candidates"][0]["content"]["parts"][0]["text"]
-    except (KeyError, IndexError):
-        return "⚠️ Agent 2: Unexpected Gemini response structure."
-
-
+# ✅ Agent 2 - Generate UI image
 def generate_ui_image(prompt):
-    # Since you're using only Gemini, simulate the image (replace with actual image API if needed)
-    return f"https://dummyimage.com/1024x1024/cccccc/000000.png&text={prompt.replace(' ', '+')}"
+    print("⏳ Generating UI image using Gemini...")
+    response = model.generate_content(prompt)
+    return response.text  # This is usually a design description, not an actual image

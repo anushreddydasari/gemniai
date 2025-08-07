@@ -1,37 +1,34 @@
-# agent1.py
-import requests
-import json
+def generate_agent1_response(app_idea):
+    if not app_idea:
+        return "❗ No idea provided. Please enter an application idea."
 
-GEMINI_API_KEY = "AIzaSyCMO28d7v8lI8W9VIOL-ENdMmlw9okPoJw"
-GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-HEADERS = {"Content-Type": "application/json"}
+    # Simple example of how the response could vary by keywords
+    idea = app_idea.lower()
+    
+    if "restaurant" in idea:
+        tech_stack = "React (Frontend), Node.js (Backend), MongoDB (Database)"
+        mvp = "- Digital menu\n- Table QR scanner\n- Order placement"
+        dev_plan = "- UI for menu browsing\n- Backend for order processing\n- MongoDB schema for orders & menu"
+    elif "chat" in idea or "messaging" in idea:
+        tech_stack = "Flutter (Cross-platform), Firebase (Backend & Auth)"
+        mvp = "- One-on-one chat\n- Notifications\n- User login/signup"
+        dev_plan = "- Flutter UI\n- Firebase setup for auth & Firestore\n- Push notifications config"
+    else:
+        tech_stack = "React (Frontend), Express.js (Backend), PostgreSQL (Database)"
+        mvp = "- Basic CRUD\n- User auth\n- Responsive design"
+        dev_plan = "- Frontend UI setup\n- REST API with Express\n- DB models with PostgreSQL"
 
-def generate_app_info(app_name):
-    prompt = f"""
-You are a software architect. For the application idea: "{app_name}", generate the following:
+    return f"""
+🤖 Agent 1: App Idea Analysis for: **{app_idea}**
 
-1. Tech Stack (Frontend, Backend, Database, Hosting)
-2. MVP (Minimum Viable Product - 4 to 6 points)
-3. Features (4 to 6 main features)
+🔧 Tech Stack:
+{tech_stack}
 
-Return the output in clear bullet format.
+🎯 MVP Features:
+{mvp}
+
+🛠 Development Plan:
+{dev_plan}
 """
-
-    data = {
-        "contents": [
-            {
-                "role": "user",
-                "parts": [{"text": prompt}]
-            }
-        ]
-    }
-
-    response = requests.post(GEMINI_ENDPOINT, headers=HEADERS, data=json.dumps(data))
-
-    if response.status_code != 200:
-        return f"❌ Agent 1 Gemini error {response.status_code}: {response.text}"
-
-    try:
-        return response.json()["candidates"][0]["content"]["parts"][0]["text"]
-    except (KeyError, IndexError):
-        return "⚠️ Agent 1: Unexpected Gemini response structure."
+import requests
+import json 
